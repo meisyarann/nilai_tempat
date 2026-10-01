@@ -2603,6 +2603,14 @@
       background: #F8FAFC;
     }
 
+    .dash-table tr.row-real-student td {
+      background: #F0FDF4;
+    }
+
+    .dash-table tr.row-real-student:hover td {
+      background: #DCFCE7;
+    }
+
     .badge-status {
       display: inline-flex;
       align-items: center;
@@ -3915,6 +3923,11 @@
         
         <!-- Layar Aktif Kuis -->
         <div id="quizActiveView">
+          <!-- Bar Informasi Peserta Kuis -->
+          <div id="quizActiveStudentBar" style="background:#F1F5F9; border:1px solid #CBD5E1; border-radius:var(--radius-md); padding:10px 16px; margin-bottom:14px; font-size:0.9rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <!-- Diperbarui oleh updateQuizStudentBar() -->
+          </div>
+
           <div class="quiz-header">
             <div class="quiz-progress-text" id="quizQuestionIndexText">
               Soal 1 dari 10
@@ -3951,6 +3964,23 @@
           <p class="result-message" id="resultMessage">
             Selamat! Kamu telah menguasai nilai tempat bilangan cacah sampai 10.000 dengan sempurna!
           </p>
+
+          <!-- Kartu Konfirmasi Deteksi & Sinkronisasi Data Siswa -->
+          <div id="quizSyncFeedbackCard" style="background:#F0FDF4; border:2px solid #86EFAC; border-radius:var(--radius-md); padding:16px 20px; margin:20px auto 25px auto; max-width:620px; text-align:left; display:flex; align-items:center; gap:16px; box-shadow:0 4px 14px rgba(22, 163, 74, 0.08);">
+            <div style="font-size:36px; line-height:1; flex-shrink:0;">📊</div>
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px;">
+                <span style="font-weight:800; font-size:1.02rem; color:#14532D;">Data Siswa &amp; Nilai Berhasil Terdeteksi!</span>
+                <span class="badge-status success" id="quizSyncPill">Tersimpan</span>
+              </div>
+              <p style="font-size:0.9rem; color:#166534; margin:0 0 4px 0;" id="quizSyncDetails">
+                Nama: <strong>-</strong> • Kelas: <strong>-</strong> • Skor: <strong>-</strong>
+              </p>
+              <div style="font-size:0.82rem; color:#15803D; display:flex; align-items:center; gap:6px;" id="quizSyncSheetNote">
+                <span>🟢</span> <span>Tersinkronisasi ke Dashboard Guru &amp; Google Spreadsheet.</span>
+              </div>
+            </div>
+          </div>
 
           <div style="display:flex; justify-content:center; gap:15px; margin-bottom:25px;">
             <button class="btn-cta" onclick="restartQuiz()">Ulangi Kuis 🔄</button>
@@ -4060,6 +4090,11 @@
           <div class="teacher-name">Elfida, S.Pd.</div>
           <div class="school-name">SD AL Azhar 2 Bandar Lampung</div>
           <div class="year">Tahun Pelajaran 2024 / 2025</div>
+          <div style="margin-top:10px;">
+            <button class="btn-guide" style="padding:5px 12px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;" onclick="promptTeacherDirectLogin()" title="Masuk sebagai Guru untuk memantau nilai siswa">
+              <span>🔐</span> <span>Akses Dashboard Guru</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -4171,7 +4206,7 @@
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:10px;">
-          <span class="sheet-status-pill" id="sheetLiveBadge">
+          <span class="sheet-status-pill" id="sheetLiveBadge" onclick="switchDashboardTab('sheets')" style="cursor:pointer;" title="Klik untuk mengelola koneksi Google Sheets">
             <span class="live-dot"></span> Spreadsheet Terhubung
           </span>
           <button class="btn-guide" style="padding:6px 14px; font-size:0.85rem;" onclick="refreshDashboardUI()" title="Segarkan Data Tabel">
@@ -4233,7 +4268,7 @@
             <span>🔍</span>
             <input type="text" id="dashSearchInput" placeholder="Cari nama siswa..." oninput="filterDashboardTable()">
           </div>
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <select id="dashClassFilter" onchange="filterDashboardTable()" class="dash-select">
               <option value="all">Semua Kelas</option>
               <option value="Kelas 4A">Kelas 4A</option>
@@ -4242,11 +4277,17 @@
               <option value="Kelas 4D">Kelas 4D</option>
               <option value="Kelas 4">Kelas 4</option>
             </select>
-            <button class="btn-cta" style="padding:8px 14px; font-size:0.88rem; background:linear-gradient(135deg, #16A34A, #15803D);" onclick="exportStudentDataToCSV()" title="Unduh format spreadsheet .CSV untuk Google Sheets / Excel">
-              <span>📥 Ekspor Spreadsheet (.CSV)</span>
+            <button class="btn-guide" id="btnFetchSheetData" style="padding:8px 12px; font-size:0.85rem; border-color:#10B981; color:#065F46; background:#ECFDF5;" onclick="fetchStudentDataFromGoogleSheets()" title="Tarik data terbaru yang masuk di Google Spreadsheet">
+              <span>🔄 Tarik dari Sheets</span>
+            </button>
+            <button class="btn-cta" style="padding:8px 14px; font-size:0.88rem; background:linear-gradient(135deg, #16A34A, #15803D);" onclick="exportStudentDataToCSV()" title="Unduh format spreadsheet .CSV untuk dibuka di Google Sheets / Excel">
+              <span>📥 Ekspor CSV</span>
+            </button>
+            <button class="btn-guide" style="padding:8px 12px; font-size:0.85rem; border-color:#FCA5A5; color:#991B1B; background:#FEF2F2;" onclick="clearDemoStudents()" title="Hapus semua baris data contoh agar tabel hanya menampilkan siswa asli">
+              <span>🗑️ Bersihkan Data Contoh</span>
             </button>
             <button class="btn-guide" style="padding:8px 12px; font-size:0.85rem;" onclick="addSimulatedStudents()" title="Tambah contoh data siswa untuk simulasi kelas">
-              <span>➕ Tambah Demo Siswa</span>
+              <span>➕ Tambah Demo</span>
             </button>
           </div>
         </div>
@@ -4275,7 +4316,7 @@
           </table>
         </div>
         <p style="font-size:0.82rem; color:#64748B; margin-top:10px;">
-          💡 <em>Info Guru: Siswa yang login dan mengerjakan latihan/game/kuis akan tercatat otomatis secara langsung (real-time).</em>
+          💡 <em>Info Guru: Siswa yang login dan mengisi kuis/latihan terdeteksi otomatis secara real-time dan tersimpan permanen di perangkat &amp; Google Spreadsheet.</em>
         </p>
       </div>
 
@@ -4334,6 +4375,7 @@
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(["Tanggal & Waktu", "Nama Siswa", "Kelas", "Aktivitas", "Skor Game 1 (Balok)", "Skor Game 2 (Cepat)", "Skor Game 3 (Pasang)", "Nilai Kuis", "Status KKTP"]);
     sheet.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#D1FAE5");
+    sheet.setFrozenRows(1);
   }
   
   var p = e.parameter || {};
@@ -4349,7 +4391,36 @@
     p.kktp || "-"
   ]);
   
-  return ContentService.createTextOutput(JSON.stringify({ result: "success" }))
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data tersimpan" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+  var values = sheet.getDataRange().getValues();
+  if (values.length &lt;= 1) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  var list = [];
+  for (var i = 1; i &lt; values.length; i++) {
+    var r = values[i];
+    list.push({
+      time: r[0] ? String(r[0]) : "-",
+      nama: r[1] ? String(r[1]) : "-",
+      kelas: r[2] ? String(r[2]) : "-",
+      aktivitas: r[3] ? String(r[3]) : "-",
+      game1: r[4] !== "" ? Number(r[4]) : 0,
+      game2: r[5] !== "" ? Number(r[5]) : 0,
+      game3: r[6] !== "" ? Number(r[6]) : 0,
+      nilaiKuis: (r[7] !== "" &amp;&amp; r[7] !== "-") ? Number(r[7]) : null,
+      kktp: r[8] ? String(r[8]) : "-"
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ status: "success", data: list }))
     .setMimeType(ContentService.MimeType.JSON);
 }</pre>
           </div>
@@ -4411,9 +4482,25 @@
        ======================================================== -->
   <script>
     /* ========================================================
-       0. SISTEM AUTENTIKASI SISWA & GURU (SESI MEMORI)
+       0. SISTEM AUTENTIKASI SISWA & GURU (DENGAN LOCALSTORAGE)
        ======================================================== */
+    const STORAGE_KEY_STUDENTS = 'nilai_tempat_student_records_v1';
+    const STORAGE_KEY_SHEETS_URL = 'nilai_tempat_sheets_url_v1';
+    const STORAGE_KEY_USER = 'nilai_tempat_current_user_v1';
+
     let currentUser = null; // { role: 'siswa'|'guru', name: string, kelas: string }
+
+    function saveCurrentUserSession() {
+      try {
+        if (currentUser) {
+          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
+        } else {
+          localStorage.removeItem(STORAGE_KEY_USER);
+        }
+      } catch (e) {
+        console.warn('Gagal menyimpan user session:', e);
+      }
+    }
 
     function switchLoginRole(role) {
       playSound('click');
@@ -4455,6 +4542,7 @@
         kelas: kelas
       };
 
+      saveCurrentUserSession();
       playSound('fanfare');
       triggerConfetti(45);
       applyUserSession();
@@ -4476,6 +4564,7 @@
           kelas: 'Admin Pengajar'
         };
 
+        saveCurrentUserSession();
         if (errBox) errBox.style.display = 'none';
         playSound('fanfare');
         triggerConfetti(45);
@@ -4489,6 +4578,12 @@
           errBox.textContent = '❌ Username atau password guru tidak sesuai! Silakan periksa kembali.';
         }
       }
+    }
+
+    function promptTeacherDirectLogin() {
+      playSound('click');
+      openLoginModal();
+      switchLoginRole('guru');
     }
 
     function applyUserSession() {
@@ -4533,6 +4628,8 @@
           studentInfoElem.innerHTML = `👨‍🏫 Pengajar: <strong>Guru / Admin</strong>`;
         }
       }
+
+      updateQuizStudentBar();
     }
 
     function openLoginModal() {
@@ -4550,6 +4647,7 @@
     function handleLogout() {
       playSound('click');
       currentUser = null;
+      saveCurrentUserSession();
 
       const profileBadge = document.getElementById('userProfileBadge');
       const btnOpenLoginNav = document.getElementById('btnOpenLoginNav');
@@ -4574,6 +4672,7 @@
       const errBox = document.getElementById('guruLoginError');
       if (errBox) errBox.style.display = 'none';
 
+      updateQuizStudentBar();
       openLoginModal();
     }
 
@@ -4583,6 +4682,7 @@
       if (modal) {
         modal.style.display = 'flex';
         switchDashboardTab('rekap');
+        updateSheetBadge(!!googleSheetsEndpoint);
       }
     }
 
@@ -4595,7 +4695,7 @@
     /* ========================================================
        0B. SISTEM REKAPITULASI SISWA & INTEGRASI SPREADSHEET
        ======================================================== */
-    let studentRecords = [
+    const defaultDemoStudents = [
       {
         id: 101,
         time: '08:15',
@@ -4606,7 +4706,8 @@
         game2: 75,
         game3: 100,
         nilaiKuis: 100,
-        kktp: 'Tuntas 🌟'
+        kktp: 'Tuntas 🌟',
+        isDemo: true
       },
       {
         id: 102,
@@ -4618,7 +4719,8 @@
         game2: 60,
         game3: 75,
         nilaiKuis: 90,
-        kktp: 'Tuntas 🌟'
+        kktp: 'Tuntas 🌟',
+        isDemo: true
       },
       {
         id: 103,
@@ -4630,7 +4732,8 @@
         game2: 45,
         game3: 50,
         nilaiKuis: 80,
-        kktp: 'Tuntas 🌟'
+        kktp: 'Tuntas 🌟',
+        isDemo: true
       },
       {
         id: 104,
@@ -4642,7 +4745,8 @@
         game2: 30,
         game3: 50,
         nilaiKuis: 70,
-        kktp: 'Perlu Bimbingan ⚠️'
+        kktp: 'Perlu Bimbingan ⚠️',
+        isDemo: true
       },
       {
         id: 105,
@@ -4654,11 +4758,36 @@
         game2: 45,
         game3: 0,
         nilaiKuis: null,
-        kktp: 'Belum Kuis ⏳'
+        kktp: 'Belum Kuis ⏳',
+        isDemo: true
       }
     ];
 
-    let googleSheetsEndpoint = '';
+    function loadStudentRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_STUDENTS);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Gagal memuat student records dari localStorage:', e);
+      }
+      return JSON.parse(JSON.stringify(defaultDemoStudents));
+    }
+
+    function saveStudentRecords() {
+      try {
+        localStorage.setItem(STORAGE_KEY_STUDENTS, JSON.stringify(studentRecords));
+      } catch (e) {
+        console.warn('Gagal menyimpan student records ke localStorage:', e);
+      }
+    }
+
+    let studentRecords = loadStudentRecords();
+    let googleSheetsEndpoint = localStorage.getItem(STORAGE_KEY_SHEETS_URL) || '';
 
     function recordStudentLogin(nama, kelas) {
       const now = new Date();
@@ -4675,13 +4804,23 @@
           game2: 0,
           game3: 0,
           nilaiKuis: null,
-          kktp: 'Belum Kuis ⏳'
+          kktp: 'Belum Kuis ⏳',
+          isDemo: false
         };
         studentRecords.unshift(student);
       } else {
         student.time = timeStr;
         student.aktivitas = 'Aktif Kembali';
+        student.isDemo = false;
+        const idx = studentRecords.indexOf(student);
+        if (idx > 0) {
+          studentRecords.splice(idx, 1);
+          studentRecords.unshift(student);
+        }
       }
+
+      saveStudentRecords();
+      renderDashboardTable();
 
       syncToGoogleSheets({
         timestamp: `${now.toLocaleDateString('id-ID')} ${timeStr}`,
@@ -4694,8 +4833,6 @@
         nilaiKuis: student.nilaiKuis !== null ? student.nilaiKuis : '-',
         kktp: student.kktp
       });
-
-      renderDashboardTable();
     }
 
     function recordGameScore(gameNum, score) {
@@ -4706,38 +4843,54 @@
         if (gameNum === 2) student.game2 = Math.max(student.game2 || 0, score);
         if (gameNum === 3) student.game3 = Math.max(student.game3 || 0, score);
         student.aktivitas = `Bermain Game ${gameNum}`;
+        student.isDemo = false;
+        saveStudentRecords();
         renderDashboardTable();
       }
     }
 
     function recordStudentQuiz(finalScore) {
-      if (!currentUser || currentUser.role !== 'siswa') return;
       const now = new Date();
       const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('id-ID');
 
-      let student = studentRecords.find(s => s.nama.toLowerCase() === currentUser.name.toLowerCase() && s.kelas === currentUser.kelas);
+      let studentName = (currentUser && currentUser.name) ? currentUser.name : 'Siswa Tamu (Mandiri)';
+      let studentClass = (currentUser && currentUser.kelas) ? currentUser.kelas : 'Kelas 4';
+
+      let student = studentRecords.find(s => s.nama.toLowerCase() === studentName.toLowerCase() && s.kelas === studentClass);
       if (!student) {
         student = {
           id: Date.now(),
           time: timeStr,
-          nama: currentUser.name,
-          kelas: currentUser.kelas,
+          nama: studentName,
+          kelas: studentClass,
           aktivitas: 'Kuis Selesai',
-          game1: g1State ? g1State.score : 0,
-          game2: g2State ? g2State.score : 0,
-          game3: g3State ? g3State.score : 0,
+          game1: typeof g1State !== 'undefined' && g1State ? g1State.score : 0,
+          game2: typeof g2State !== 'undefined' && g2State ? g2State.score : 0,
+          game3: typeof g3State !== 'undefined' && g3State ? g3State.score : 0,
           nilaiKuis: finalScore,
-          kktp: finalScore >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️'
+          kktp: finalScore >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️',
+          isDemo: false
         };
         studentRecords.unshift(student);
       } else {
+        student.time = timeStr;
         student.nilaiKuis = finalScore;
         student.aktivitas = 'Kuis Selesai';
         student.kktp = finalScore >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️';
+        student.isDemo = false;
+        const idx = studentRecords.indexOf(student);
+        if (idx > 0) {
+          studentRecords.splice(idx, 1);
+          studentRecords.unshift(student);
+        }
       }
 
+      saveStudentRecords();
+      renderDashboardTable();
+
       syncToGoogleSheets({
-        timestamp: `${now.toLocaleDateString('id-ID')} ${timeStr}`,
+        timestamp: `${dateStr} ${timeStr}`,
         nama: student.nama,
         kelas: student.kelas,
         aktivitas: `Kuis Selesai (Skor: ${finalScore})`,
@@ -4748,11 +4901,14 @@
         kktp: student.kktp
       });
 
-      renderDashboardTable();
+      updateQuizFeedbackBanner(student, finalScore);
     }
 
     function syncToGoogleSheets(data) {
-      if (!googleSheetsEndpoint) return;
+      if (!googleSheetsEndpoint) {
+        console.log('Google Sheets endpoint belum dikonfigurasi. Data tersimpan di localStorage browser.');
+        return;
+      }
       try {
         const formData = new URLSearchParams();
         for (const k in data) formData.append(k, data[k]);
@@ -4762,28 +4918,146 @@
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: formData.toString()
         }).then(() => {
-          console.log('Sync Google Sheets sukses:', data.nama);
+          console.log('✅ Berhasil dikirim ke Google Sheets:', data.nama);
           updateSheetBadge(true);
         }).catch(err => {
-          console.warn('Sync Google Sheets error:', err);
-          updateSheetBadge(false);
+          console.warn('⚠️ Gagal sync Google Sheets:', err);
         });
       } catch (err) {
-        console.error(err);
+        console.error('Error syncToGoogleSheets:', err);
       }
     }
 
-    function updateSheetBadge(isSuccess) {
+    function updateSheetBadge(isConnected) {
       const badge = document.getElementById('sheetLiveBadge');
       if (badge) {
-        if (isSuccess) {
+        if (isConnected && googleSheetsEndpoint) {
           badge.className = 'sheet-status-pill';
+          badge.style.background = '#ECFDF5';
+          badge.style.color = '#047857';
+          badge.style.borderColor = '#A7F3D0';
           badge.innerHTML = '<span class="live-dot"></span> Spreadsheet Terhubung';
+          badge.title = 'Terhubung ke: ' + googleSheetsEndpoint;
         } else {
           badge.className = 'sheet-status-pill';
-          badge.innerHTML = '⚠️ Gagal Sinkron';
+          badge.style.background = '#FFFBEB';
+          badge.style.color = '#B45309';
+          badge.style.borderColor = '#FDE68A';
+          badge.innerHTML = '⚠️ Spreadsheet Belum Dihubungkan';
+          badge.title = 'Klik untuk memasukkan Web App URL Google Sheets';
         }
       }
+    }
+
+    function updateQuizFeedbackBanner(student, score) {
+      const card = document.getElementById('quizSyncFeedbackCard');
+      const details = document.getElementById('quizSyncDetails');
+      const note = document.getElementById('quizSyncSheetNote');
+      const pill = document.getElementById('quizSyncPill');
+      if (!card || !details) return;
+
+      card.style.display = 'flex';
+      details.innerHTML = `Nama: <strong>${student.nama}</strong> • Kelas: <strong>${student.kelas}</strong> • Skor: <strong style="color:${score >= 75 ? '#15803D' : '#B91C1C'};">${score} / 100</strong> (${student.kktp})`;
+
+      if (pill) {
+        pill.textContent = student.kktp.includes('Tuntas') ? 'Tuntas KKTP 🌟' : 'Perlu Bimbingan ⚠️';
+        pill.className = student.kktp.includes('Tuntas') ? 'badge-status success' : 'badge-status warning';
+      }
+
+      if (note) {
+        if (googleSheetsEndpoint) {
+          note.innerHTML = `<span>🟢</span> <span>Data siswa terdeteksi dan tersinkronisasi ke <strong>Dashboard Guru</strong> &amp; <strong>Google Spreadsheet</strong>.</span>`;
+        } else {
+          note.innerHTML = `<span>💾</span> <span>Data siswa terdeteksi dan tersimpan permanen di <strong>Dashboard Guru</strong>. Sambungkan spreadsheet di Dashboard jika ingin sync online.</span>`;
+        }
+      }
+    }
+
+    async function fetchStudentDataFromGoogleSheets() {
+      playSound('click');
+      if (!googleSheetsEndpoint) {
+        alert('Google Sheets belum dihubungkan!\n\nSilakan buka tab "Sambungkan Google Sheets" dan masukkan URL Web App Google Apps Script Anda.');
+        switchDashboardTab('sheets');
+        return;
+      }
+
+      const btn = document.getElementById('btnFetchSheetData');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '⏳ Menarik Data...';
+
+      try {
+        const res = await fetch(googleSheetsEndpoint);
+        const json = await res.json();
+        if (json && json.data && Array.isArray(json.data)) {
+          let addedCount = 0;
+          json.data.forEach(item => {
+            if (!item.nama || item.nama === '-') return;
+            let existing = studentRecords.find(s => s.nama.toLowerCase() === item.nama.toLowerCase() && s.kelas === item.kelas);
+            if (!existing) {
+              studentRecords.unshift({
+                id: Date.now() + Math.random(),
+                time: item.time || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                nama: item.nama,
+                kelas: item.kelas,
+                aktivitas: item.aktivitas || 'Kuis Selesai',
+                game1: Number(item.game1) || 0,
+                game2: Number(item.game2) || 0,
+                game3: Number(item.game3) || 0,
+                nilaiKuis: item.nilaiKuis !== null ? Number(item.nilaiKuis) : null,
+                kktp: item.kktp || (Number(item.nilaiKuis) >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️'),
+                isDemo: false
+              });
+              addedCount++;
+            } else {
+              if (item.nilaiKuis !== null && item.nilaiKuis !== undefined) {
+                existing.nilaiKuis = Number(item.nilaiKuis);
+                existing.kktp = item.kktp || (Number(item.nilaiKuis) >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️');
+              }
+              if (item.aktivitas) existing.aktivitas = item.aktivitas;
+            }
+          });
+
+          saveStudentRecords();
+          renderDashboardTable();
+          playSound('fanfare');
+          triggerConfetti(40);
+          alert(`🎉 Sukses! Ditemukan ${json.data.length} baris di Google Sheets (${addedCount} data baru ditambahkan ke tabel).`);
+        } else {
+          alert('Respon dari Google Sheets diterima, tetapi belum ada data baru.');
+        }
+      } catch (err) {
+        console.warn('Fetch error:', err);
+        alert('Catatan Sinkronisasi:\nData di browser lokal tetap aman dan tersimpan.\nJika ingin menarik data dari Google Sheets, pastikan fungsi doGet(e) sudah terpasang di Google Apps Script dan Web App di-deploy dengan akses "Anyone".');
+      } finally {
+        if (btn) btn.innerHTML = originalText || '<span>🔄 Tarik dari Sheets</span>';
+      }
+    }
+
+    function clearDemoStudents() {
+      playSound('click');
+      const realStudents = studentRecords.filter(s => !s.isDemo);
+      if (studentRecords.length === realStudents.length) {
+        alert('Saat ini tidak ada data demo/contoh di dalam tabel.');
+        return;
+      }
+      if (confirm('Hapus semua data contoh/demo? Hanya siswa asli yang pernah login/mengerjakan kuis yang akan dipertahankan.')) {
+        studentRecords = realStudents;
+        saveStudentRecords();
+        renderDashboardTable();
+        playSound('correct');
+      }
+    }
+
+    function restoreDemoStudents() {
+      playSound('click');
+      defaultDemoStudents.forEach(demo => {
+        if (!studentRecords.some(s => s.id === demo.id || s.nama === demo.nama)) {
+          studentRecords.push(JSON.parse(JSON.stringify(demo)));
+        }
+      });
+      saveStudentRecords();
+      renderDashboardTable();
+      triggerConfetti(30);
     }
 
     function switchDashboardTab(tabId) {
@@ -4803,6 +5077,11 @@
 
       if (tabId === 'rekap') {
         renderDashboardTable();
+      } else if (tabId === 'sheets') {
+        const inputUrl = document.getElementById('googleSheetWebAppUrl');
+        if (inputUrl && googleSheetsEndpoint) {
+          inputUrl.value = googleSheetsEndpoint;
+        }
       }
     }
 
@@ -4843,6 +5122,9 @@
       if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:28px; color:#64748B;">
           🐱 <em>Tidak ada data siswa yang cocok dengan filter / pencarian.</em>
+          <div style="margin-top:10px;">
+            <button class="btn-guide" style="padding:4px 10px; font-size:0.8rem;" onclick="restoreDemoStudents()">➕ Tampilkan Kembali Data Contoh</button>
+          </div>
         </td></tr>`;
         return;
       }
@@ -4861,10 +5143,20 @@
           ? `<strong style="font-size:1.02rem; color:${s.nilaiKuis >= 75 ? '#15803D' : '#B91C1C'};">${s.nilaiKuis}</strong> / 100` 
           : '<span style="color:#94A3B8;">Belum Kuis</span>';
 
-        return `<tr>
+        const isReal = !s.isDemo;
+        const originBadge = isReal 
+          ? '<span class="badge-status success" style="font-size:0.72rem; font-weight:800; padding:1px 6px;">✨ Siswa Asli</span>'
+          : '<span class="badge-status gray" style="font-size:0.72rem; padding:1px 6px;">Contoh</span>';
+
+        const rowClass = isReal ? 'row-real-student' : '';
+
+        return `<tr class="${rowClass}">
           <td>${idx + 1}</td>
           <td style="color:#64748B; font-size:0.82rem;">${s.time || '-'}</td>
-          <td><strong>${s.nama}</strong></td>
+          <td>
+            <strong>${s.nama}</strong>
+            <div style="margin-top:2px;">${originBadge}</div>
+          </td>
           <td><span class="badge-status info">${s.kelas}</span></td>
           <td><span class="badge-status ${badgeClass}">${s.aktivitas}</span></td>
           <td style="text-align:center; font-weight:700; color:#4361EE;">${s.game1 || 0}</td>
@@ -4873,7 +5165,7 @@
           <td style="text-align:center;">${quizDisplay}</td>
           <td><span class="badge-status ${kktpBadge}">${s.kktp}</span></td>
           <td style="text-align:center;">
-            <button onclick="deleteStudentRow(${s.id})" style="border:none; background:#FEE2E2; color:#DC2626; border-radius:6px; padding:3px 8px; cursor:pointer; font-size:0.8rem;" title="Hapus Data">🗑️</button>
+            <button onclick="deleteStudentRow(${s.id})" style="border:none; background:#FEE2E2; color:#DC2626; border-radius:6px; padding:3px 8px; cursor:pointer; font-size:0.8rem;" title="Hapus Baris Ini">🗑️</button>
           </td>
         </tr>`;
       }).join('');
@@ -4885,13 +5177,16 @@
 
     function refreshDashboardUI() {
       playSound('click');
+      studentRecords = loadStudentRecords();
       renderDashboardTable();
+      updateSheetBadge(!!googleSheetsEndpoint);
       triggerConfetti(25);
     }
 
     function deleteStudentRow(id) {
       if (confirm('Hapus baris data siswa ini dari tabel rekap?')) {
         studentRecords = studentRecords.filter(s => s.id !== id);
+        saveStudentRecords();
         renderDashboardTable();
       }
     }
@@ -4900,7 +5195,7 @@
       playSound('click');
       const sampleNames = ['Fathir Al Ghifari', 'Zahra Amelia', 'M. Rizky Ramadhan', 'Khansa Nadhira', 'Bintang Pratama'];
       const sampleClasses = ['Kelas 4A', 'Kelas 4B', 'Kelas 4C', 'Kelas 4D'];
-      const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)] + ' (Baru)';
+      const randomName = sampleNames[Math.floor(Math.random() * sampleNames.length)] + ' (Simulasi)';
       const randomClass = sampleClasses[Math.floor(Math.random() * sampleClasses.length)];
       const randomScore = [70, 80, 90, 100][Math.floor(Math.random() * 4)];
 
@@ -4914,9 +5209,11 @@
         game2: Math.floor(Math.random() * 5 + 3) * 15,
         game3: Math.floor(Math.random() * 4 + 2) * 25,
         nilaiKuis: randomScore,
-        kktp: randomScore >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️'
+        kktp: randomScore >= 75 ? 'Tuntas 🌟' : 'Perlu Bimbingan ⚠️',
+        isDemo: true
       };
       studentRecords.unshift(newStudent);
+      saveStudentRecords();
       renderDashboardTable();
       triggerConfetti(35);
     }
@@ -4927,13 +5224,14 @@
         return;
       }
       let csvContent = '\uFEFF'; // BOM untuk UTF-8
-      csvContent += 'No,Waktu,Nama Siswa,Kelas,Aktivitas,Game 1 (Balok),Game 2 (Cepat),Game 3 (Pasang),Nilai Kuis,Status KKTP\r\n';
+      csvContent += 'No,Waktu,Nama Siswa,Tipe,Kelas,Aktivitas,Game 1 (Balok),Game 2 (Cepat),Game 3 (Pasang),Nilai Kuis,Status KKTP\r\n';
 
       studentRecords.forEach((s, idx) => {
         const row = [
           idx + 1,
           `"${s.time || '-'}"`,
           `"${s.nama.replace(/"/g, '""')}"`,
+          `"${s.isDemo ? 'Contoh' : 'Siswa Asli'}"`,
           `"${s.kelas}"`,
           `"${s.aktivitas}"`,
           s.game1 || 0,
@@ -4961,15 +5259,23 @@
       if (!input) return;
       const url = input.value.trim();
       googleSheetsEndpoint = url;
+      try {
+        localStorage.setItem(STORAGE_KEY_SHEETS_URL, url);
+      } catch (e) {
+        console.warn('Gagal menyimpan sheets url ke localStorage:', e);
+      }
+
       const statusMsg = document.getElementById('sheetStatusMsg');
       if (statusMsg) {
         statusMsg.style.display = 'block';
         if (url) {
           statusMsg.className = 'badge-status success';
-          statusMsg.innerHTML = '✅ URL tersimpan! Sinkronisasi otomatis ke Google Sheets aktif.';
+          statusMsg.innerHTML = '✅ URL tersimpan permanen! Sinkronisasi otomatis ke Google Sheets aktif.';
+          updateSheetBadge(true);
         } else {
           statusMsg.className = 'badge-status warning';
           statusMsg.innerHTML = '⚠️ URL kosong. Mode penyimpanan tabel lokal aktif.';
+          updateSheetBadge(false);
         }
       }
       playSound('correct');
@@ -4983,6 +5289,10 @@
         return;
       }
       googleSheetsEndpoint = url;
+      try {
+        localStorage.setItem(STORAGE_KEY_SHEETS_URL, url);
+      } catch (e) {}
+
       const statusMsg = document.getElementById('sheetStatusMsg');
       if (statusMsg) {
         statusMsg.style.display = 'block';
@@ -5016,6 +5326,7 @@
             statusMsg.className = 'badge-status success';
             statusMsg.innerHTML = '🎉 Sukses! Data simulasi terkirim ke Google Sheets. Silakan buka spreadsheet Anda!';
           }
+          updateSheetBadge(true);
           playSound('fanfare');
           triggerConfetti(45);
         }).catch(err => {
@@ -5934,12 +6245,50 @@
     let currentQuizIndex = 0;
     let userAnswers = {};
 
+    function updateQuizStudentBar() {
+      const bar = document.getElementById('quizActiveStudentBar');
+      if (!bar) return;
+      if (currentUser && currentUser.role === 'siswa') {
+        bar.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.15rem;">🎒</span>
+            <span>Peserta Kuis: <strong style="color:var(--primary); font-size:1.02rem;">${currentUser.name}</strong> (${currentUser.kelas})</span>
+          </div>
+          <div style="font-size:0.83rem; color:#15803D; display:flex; align-items:center; gap:5px; font-weight:700;">
+            <span class="live-dot" style="width:7px; height:7px;"></span>
+            <span>Data otomatis terdeteksi &amp; tersimpan ke Guru</span>
+          </div>
+        `;
+      } else if (currentUser && currentUser.role === 'guru') {
+        bar.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.15rem;">👨‍🏫</span>
+            <span>Mode Guru: <strong>${currentUser.name}</strong> (Uji Coba Kuis)</span>
+          </div>
+          <div style="font-size:0.83rem; color:#4361EE; font-weight:700;">
+            <span>Hasil kuis akan tercatat sebagai data uji coba di Dashboard</span>
+          </div>
+        `;
+      } else {
+        bar.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:1.15rem;">💡</span>
+            <span>Belum masuk? Masuk terlebih dahulu agar namamu tercatat di Dashboard Guru &amp; Spreadsheet!</span>
+          </div>
+          <div>
+            <button class="btn-guide" style="padding:4px 12px; font-size:0.82rem; font-weight:700;" onclick="openLoginModal()">🔑 Masuk Sekarang</button>
+          </div>
+        `;
+      }
+    }
+
     function initQuiz() {
       // Acak urutan soal
       quizQuestions = [...MASTER_SOAL_KUIS].sort(() => Math.random() - 0.5);
       currentQuizIndex = 0;
       userAnswers = {};
 
+      updateQuizStudentBar();
       renderQuizDots();
       renderQuizQuestion();
       document.getElementById('quizActiveView').style.display = 'block';
@@ -6061,6 +6410,31 @@
     function submitQuiz() {
       playSound('click');
       saveCurrentQuizAnswer();
+
+      // Jika belum login, tanyakan nama dan kelas siswa agar tidak hilang
+      if (!currentUser) {
+        let inputName = prompt('Yuk masukkan Nama Lengkapmu agar nilaimu tercatat di Dashboard Guru & Spreadsheet:', '');
+        if (inputName && inputName.trim()) {
+          let inputKelas = prompt('Pilih Kelas (Contoh: Kelas 4A, Kelas 4B, Kelas 4C, Kelas 4D):', 'Kelas 4A') || 'Kelas 4A';
+          currentUser = {
+            role: 'siswa',
+            name: inputName.trim(),
+            kelas: inputKelas.trim()
+          };
+          saveCurrentUserSession();
+          applyUserSession();
+          recordStudentLogin(currentUser.name, currentUser.kelas);
+        } else {
+          currentUser = {
+            role: 'siswa',
+            name: 'Siswa Tamu (Mandiri)',
+            kelas: 'Kelas 4'
+          };
+          saveCurrentUserSession();
+          applyUserSession();
+          recordStudentLogin(currentUser.name, currentUser.kelas);
+        }
+      }
 
       // Hitung skor
       let correctCount = 0;
@@ -6345,14 +6719,37 @@
        L. INISIALISASI AWAL WEBSITE
        ======================================================== */
     window.addEventListener('DOMContentLoaded', () => {
+      // 1. Muat records dari localStorage
+      studentRecords = loadStudentRecords();
+
+      // 2. Muat endpoint Google Sheets dari localStorage
+      googleSheetsEndpoint = localStorage.getItem(STORAGE_KEY_SHEETS_URL) || '';
+      const inputUrl = document.getElementById('googleSheetWebAppUrl');
+      if (inputUrl && googleSheetsEndpoint) {
+        inputUrl.value = googleSheetsEndpoint;
+      }
+      updateSheetBadge(!!googleSheetsEndpoint);
+
+      // 3. Muat user session jika tersimpan di browser
+      try {
+        const rawUser = localStorage.getItem(STORAGE_KEY_USER);
+        if (rawUser) {
+          currentUser = JSON.parse(rawUser);
+          applyUserSession();
+        }
+      } catch (e) {
+        console.warn('Gagal membaca sesi user:', e);
+      }
+
       updateInteractiveTable();
       updateDecompView();
       updateDienesUI();
       initGame1(false);
       initQuiz();
+      renderDashboardTable();
       showPage('beranda', false);
 
-      // Tampilkan popup login di awal agar siswa/guru dapat masuk
+      // Tampilkan popup login di awal hanya jika belum login
       setTimeout(() => {
         if (!currentUser) {
           openLoginModal();
