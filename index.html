@@ -2898,10 +2898,10 @@
           </button>
         </div>
 
-        <!-- Tombol Khusus Dashboard Guru (Hanya muncul saat login Guru) -->
-        <button class="btn-teacher-panel" id="btnTeacherPanel" style="display:none;" onclick="openTeacherModal()" title="Buka Dashboard Guru & Rekap Nilai Siswa">
+        <!-- Tombol Portal Dashboard & Spreadsheet Guru (Selalu Dapat Diakses) -->
+        <button class="btn-teacher-panel" id="btnTeacherPanel" onclick="handleTeacherPanelClick()" title="Buka Dashboard Guru &amp; Koneksi Google Spreadsheet">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
-          <span>Dashboard Guru</span>
+          <span>📊 Dashboard &amp; Sheets</span>
         </button>
 
         <!-- Tombol Masuk jika belum login -->
@@ -2948,6 +2948,9 @@
             </button>
             <button class="btn-guide" id="btnOpenGuide" onclick="playSound('click')">
               <span>📖 Petunjuk Belajar</span>
+            </button>
+            <button class="btn-guide" style="border-color:#10B981; color:#065F46; background:#ECFDF5;" onclick="openSpreadsheetConfig()" title="Hubungkan dan kelola Google Spreadsheet Guru">
+              <span>📊 Sambungkan Spreadsheet</span>
             </button>
           </div>
         </div>
@@ -4090,9 +4093,12 @@
           <div class="teacher-name">Elfida, S.Pd.</div>
           <div class="school-name">SD AL Azhar 2 Bandar Lampung</div>
           <div class="year">Tahun Pelajaran 2024 / 2025</div>
-          <div style="margin-top:10px;">
+          <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
             <button class="btn-guide" style="padding:5px 12px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px;" onclick="promptTeacherDirectLogin()" title="Masuk sebagai Guru untuk memantau nilai siswa">
               <span>🔐</span> <span>Akses Dashboard Guru</span>
+            </button>
+            <button class="btn-guide" style="padding:5px 12px; font-size:0.78rem; display:inline-flex; align-items:center; gap:6px; border-color:#10B981; color:#065F46; background:#ECFDF5;" onclick="openSpreadsheetConfig()" title="Buka Pengaturan Google Sheets">
+              <span>📊</span> <span>Kelola Spreadsheet</span>
             </button>
           </div>
         </div>
@@ -4167,18 +4173,26 @@
 
       <!-- Form Login Guru -->
       <form id="formLoginGuru" style="display:none;" onsubmit="handleLoginGuru(event)">
+        <div style="background:#EEF2FF; border:1px solid #C7D2FE; border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:12px; font-size:0.84rem; color:#3730A3;">
+          ℹ️ <strong>Info Akun Guru:</strong> Username <code>admin</code> • Password <code>admin123</code>
+        </div>
         <div class="form-group">
           <label for="inputUsernameGuru">Username Guru:</label>
-          <input type="text" id="inputUsernameGuru" class="form-control" placeholder="Masukkan username guru..." required autocomplete="username">
+          <input type="text" id="inputUsernameGuru" class="form-control" placeholder="Masukkan username guru..." value="admin" required autocomplete="username">
         </div>
         <div class="form-group">
           <label for="inputPasswordGuru">Password Guru:</label>
-          <input type="password" id="inputPasswordGuru" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          <input type="password" id="inputPasswordGuru" class="form-control" placeholder="••••••••" value="admin123" required autocomplete="current-password">
         </div>
         <div id="guruLoginError" class="login-error-msg" style="display:none;"></div>
-        <button type="submit" class="btn-cta" style="width:100%; justify-content:center; margin-top:8px; background:linear-gradient(135deg, #4361EE, #3A0CA3);">
-          <span>Masuk Sebagai Guru</span> 🔐
-        </button>
+        <div style="display:flex; gap:8px; flex-direction:column; margin-top:8px;">
+          <button type="submit" class="btn-cta" style="width:100%; justify-content:center; background:linear-gradient(135deg, #4361EE, #3A0CA3);">
+            <span>Masuk Sebagai Guru</span> 🔐
+          </button>
+          <button type="button" class="btn-guide" style="width:100%; justify-content:center; font-size:0.86rem; border-color:#10B981; color:#065F46; background:#ECFDF5;" onclick="quickLoginTeacherAndOpenSheets()">
+            <span>⚡ Buka Langsung Dashboard &amp; Spreadsheet</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -4205,10 +4219,13 @@
             </p>
           </div>
         </div>
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
           <span class="sheet-status-pill" id="sheetLiveBadge" onclick="switchDashboardTab('sheets')" style="cursor:pointer;" title="Klik untuk mengelola koneksi Google Sheets">
             <span class="live-dot"></span> Spreadsheet Terhubung
           </span>
+          <a id="btnOpenLiveSheetHeader" href="#" target="_blank" class="btn-guide" style="padding:6px 12px; font-size:0.85rem; border-color:#10B981; color:#065F46; background:#ECFDF5; text-decoration:none; display:none; align-items:center; gap:6px;" title="Buka Google Spreadsheet di tab baru">
+            <span>↗️ Buka Spreadsheet</span>
+          </a>
           <button class="btn-guide" style="padding:6px 14px; font-size:0.85rem;" onclick="refreshDashboardUI()" title="Segarkan Data Tabel">
             🔄 Refresh
           </button>
@@ -4277,6 +4294,9 @@
               <option value="Kelas 4D">Kelas 4D</option>
               <option value="Kelas 4">Kelas 4</option>
             </select>
+            <button class="btn-guide" id="btnSyncAllToSheet" style="padding:8px 12px; font-size:0.85rem; border-color:#3B82F6; color:#1D4ED8; background:#EFF6FF;" onclick="syncAllLocalRecordsToSheet()" title="Kirim semua data siswa di tabel lokal ke Google Spreadsheet">
+              <span>📤 Kirim ke Sheets</span>
+            </button>
             <button class="btn-guide" id="btnFetchSheetData" style="padding:8px 12px; font-size:0.85rem; border-color:#10B981; color:#065F46; background:#ECFDF5;" onclick="fetchStudentDataFromGoogleSheets()" title="Tarik data terbaru yang masuk di Google Spreadsheet">
               <span>🔄 Tarik dari Sheets</span>
             </button>
@@ -4323,105 +4343,182 @@
       <!-- TAB 2: SAMBUNGKAN GOOGLE SHEETS -->
       <div id="dashSectionSheets" style="display:none;">
         <div class="sheets-card">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
-            <div>
-              <h4 style="color:#047857; font-size:1.2rem; margin:0 0 6px 0; display:flex; align-items:center; gap:8px;">
-                <span style="font-size:24px;">📊</span> Koneksi Langsung ke Google Sheets
-              </h4>
-              <p style="color:#334155; font-size:0.92rem; margin:0;">
-                Hubungkan media pembelajaran ini langsung dengan Google Spreadsheet Anda melalui Web App Google Apps Script. Setiap siswa login atau menyelesaikan kuis, baris baru otomatis bertambah di Spreadsheet!
-              </p>
+          <!-- Status Banner Real-time -->
+          <div id="sheetsConnectionStatusBanner" style="background:#FFFBEB; border:2px solid #FDE68A; border-radius:var(--radius-md); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span id="sheetBannerIcon" style="font-size:32px;">⚠️</span>
+              <div>
+                <h4 id="sheetBannerTitle" style="color:#92400E; margin:0 0 4px 0; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                  Google Spreadsheet Belum Terhubung
+                </h4>
+                <p id="sheetBannerDesc" style="color:#B45309; margin:0; font-size:0.88rem;">
+                  Data saat ini tersimpan di browser lokal. Hubungkan ke Google Spreadsheet agar data siswa tersinkronisasi otomatis secara online.
+                </p>
+              </div>
             </div>
-            <a href="https://sheets.new" target="_blank" class="btn-cta" style="padding:8px 16px; font-size:0.88rem; background:#107C41; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-              <span>Buka Google Sheets Baru</span> ↗
-            </a>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <a href="https://sheets.new" target="_blank" class="btn-cta" style="padding:8px 14px; font-size:0.85rem; background:#107C41; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                <span>Buat Sheets Baru (sheets.new)</span> ↗
+              </a>
+              <a id="btnOpenCurrentSheet" href="#" target="_blank" class="btn-guide" style="padding:8px 14px; font-size:0.85rem; border-color:#10B981; color:#065F46; background:#FFFFFF; text-decoration:none; display:none; align-items:center; gap:6px;">
+                <span>Buka Spreadsheet Saya</span> ↗
+              </a>
+            </div>
           </div>
 
-          <div style="background:white; border:2px solid #E2E8F0; border-radius:var(--radius-md); padding:16px; margin-bottom:20px;">
-            <label style="display:block; font-weight:700; font-size:0.92rem; color:var(--text-main); margin-bottom:6px;">
-              URL Google Apps Script Web App (Endpoint):
-            </label>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <input type="url" id="googleSheetWebAppUrl" class="form-control" style="flex:1; min-width:280px;" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
-              <button class="btn-cta" onclick="saveGoogleSheetUrl()" style="padding:10px 18px; font-size:0.9rem;">
-                💾 Simpan URL
+          <!-- Form Input URL & Konfigurasi -->
+          <div style="background:white; border:2px solid #E2E8F0; border-radius:var(--radius-md); padding:20px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+              <label for="googleSheetWebAppUrl" style="font-weight:700; font-size:0.95rem; color:var(--text-main);">
+                🔗 Masukkan URL Web App Apps Script ATAU Link Google Spreadsheet:
+              </label>
+              <button class="btn-guide" id="btnDisconnectSheet" onclick="disconnectGoogleSheets()" style="padding:4px 10px; font-size:0.78rem; border-color:#FECACA; color:#DC2626; display:none;">
+                ✕ Putuskan Koneksi
+              </button>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+              <input type="url" id="googleSheetWebAppUrl" class="form-control" style="flex:1; min-width:280px; font-family:monospace; font-size:0.88rem;" placeholder="https://script.google.com/macros/s/.../exec ATAU https://docs.google.com/spreadsheets/d/...">
+              <button class="btn-cta" onclick="saveGoogleSheetUrl()" style="padding:10px 18px; font-size:0.9rem; background:linear-gradient(135deg, #10B981, #059669);">
+                💾 Simpan &amp; Hubungkan
               </button>
               <button class="btn-guide" onclick="testSendToGoogleSheets()" style="padding:10px 16px; font-size:0.9rem;">
                 🧪 Tes Kirim Data
               </button>
             </div>
-            <div id="sheetStatusMsg" style="margin-top:10px; font-size:0.88rem; display:none;"></div>
+            <p style="font-size:0.82rem; color:#64748B; margin:0 0 8px 0;">
+              💡 <em>Tips: Anda dapat menempelkan URL Web App Apps Script (akhiran <code>/exec</code>) ATAU langsung menempel link dokumen Google Sheets Anda. Sistem akan memandu Anda secara otomatis.</em>
+            </p>
+            <div id="sheetStatusMsg" style="margin-top:10px; font-size:0.88rem; display:none; padding:10px 14px; border-radius:var(--radius-sm);"></div>
+
+            <!-- Tombol Aksi Lanjutan jika sudah terhubung -->
+            <div id="sheetConnectedActions" style="margin-top:16px; padding-top:14px; border-top:1px dashed #E2E8F0; display:none; gap:10px; flex-wrap:wrap;">
+              <button class="btn-cta" onclick="syncAllLocalRecordsToSheet()" style="padding:8px 14px; font-size:0.85rem; background:linear-gradient(135deg, #3B82F6, #1D4ED8);">
+                📤 Sinkronkan Semua Rekap Siswa Lokal ke Sheets
+              </button>
+              <button class="btn-guide" onclick="fetchStudentDataFromGoogleSheets()" style="padding:8px 14px; font-size:0.85rem; border-color:#10B981; color:#065F46; background:#ECFDF5;">
+                🔄 Tarik Data dari Spreadsheet ke Tabel Lokal
+              </button>
+            </div>
           </div>
 
+          <!-- Panduan 3 Langkah -->
           <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:var(--radius-md); padding:18px;">
-            <h5 style="color:var(--primary-dark); font-size:1.05rem; margin:0 0 10px 0;">
-              🛠️ Panduan 3 Langkah Menghubungkan Google Spreadsheet:
+            <h5 style="color:var(--primary-dark); font-size:1.05rem; margin:0 0 10px 0; display:flex; align-items:center; gap:8px;">
+              <span>🛠️</span> Panduan Menghubungkan Google Spreadsheet (Hanya 1 Menit):
             </h5>
-            <ol style="margin:0 0 16px 20px; padding:0; font-size:0.9rem; color:#475569; line-height:1.6;">
-              <li>Buka spreadsheet baru di <strong><a href="https://sheets.new" target="_blank" style="color:var(--primary); text-decoration:underline;">Google Sheets (sheets.new)</a></strong>.</li>
-              <li>Buka menu <strong>Ekstensi (Extensions)</strong> &gt; <strong>Apps Script</strong>.</li>
-              <li>Hapus semua isi kode di editor, tempel kode di bawah ini, lalu klik <strong>Terapkan (Deploy)</strong> &gt; <strong>Penerapan baru (New deployment)</strong> &gt; Pilih jenis <strong>Aplikasi web (Web app)</strong>. Pada opsi <em>Akses (Who has access)</em>, pilih <strong>Siapa saja (Anyone)</strong>. Salin URL Web App dan tempel pada form di atas.</li>
+            <ol style="margin:0 0 16px 20px; padding:0; font-size:0.9rem; color:#475569; line-height:1.7;">
+              <li>Buka spreadsheet baru di Google Sheets dengan klik tombol hijau <strong><a href="https://sheets.new" target="_blank" style="color:var(--primary); text-decoration:underline; font-weight:700;">Buat Sheets Baru (sheets.new)</a></strong>.</li>
+              <li>Pada menu atas spreadsheet, klik <strong>Ekstensi (Extensions)</strong> &gt; <strong>Apps Script</strong>.</li>
+              <li>Hapus semua isi teks default di editor Apps Script, lalu klik tombol <strong>Salin Kode Sekali Klik</strong> di bawah dan tempelkan.</li>
+              <li>Klik tombol biru <strong>Terapkan (Deploy)</strong> &gt; <strong>Penerapan baru (New deployment)</strong>:
+                <ul style="margin:4px 0 6px 18px; padding:0; list-style-type:disc;">
+                  <li>Pilih jenis (ikon roda gigi): <strong>Aplikasi web (Web app)</strong></li>
+                  <li>Jalankan sebagai (Execute as): <strong>Saya (Me)</strong></li>
+                  <li>Siapa saja yang memiliki akses (Who has access): <strong style="color:#DC2626; background:#FEF2F2; padding:1px 6px; border-radius:4px;">Siapa saja (Anyone)</strong> <em>(Wajib agar siswa di berbagai HP/laptop dapat mengirim nilai tanpa login Google)</em></li>
+                </ul>
+              </li>
+              <li>Klik <strong>Deploy</strong>, izinkan akses akun Google Anda, lalu salin <strong>URL Aplikasi Web (Web App URL)</strong> yang berakhiran <code>/exec</code> dan tempel pada formulir di atas, lalu klik <strong>Simpan &amp; Hubungkan</strong>. Selesai! 🎉</li>
             </ol>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
               <span style="font-weight:700; font-size:0.88rem; color:#334155;">📄 Kode Google Apps Script (Code.gs):</span>
-              <button class="btn-guide" style="padding:4px 10px; font-size:0.8rem;" onclick="copyAppsScriptCode()">📋 Salin Kode</button>
+              <button class="btn-guide" style="padding:6px 14px; font-size:0.84rem; background:#EEF2FF; color:#4361EE; border-color:#C7D2FE; font-weight:700;" onclick="copyAppsScriptCode()">📋 Salin Kode Sekali Klik</button>
             </div>
-            <pre class="code-preview" id="appsScriptCodeText">function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getActiveSheet();
-  
-  // Buat header jika sheet masih kosong
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(["Tanggal & Waktu", "Nama Siswa", "Kelas", "Aktivitas", "Skor Game 1 (Balok)", "Skor Game 2 (Cepat)", "Skor Game 3 (Pasang)", "Nilai Kuis", "Status KKTP"]);
-    sheet.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#D1FAE5");
-    sheet.setFrozenRows(1);
+            <pre class="code-preview" id="appsScriptCodeText">// ========================================================
+// ID SPREADSHEET GURU:
+// ========================================================
+var SPREADSHEET_ID = "1JwNA7ty6evsPizR9tG6f2BVPWEFUoq9JoAoMfEdP81Y";
+
+function getTargetSheet() {
+  var ss;
+  var rawId = SPREADSHEET_ID;
+  if (rawId && rawId.trim() !== "") {
+    // Otomatis mengambil ID bersih jika ditempel link URL lengkap
+    var match = rawId.match(/\/d\/([a-zA-Z0-9-_]+)/);
+    var cleanId = match ? match[1] : rawId.replace("MASUKKAN_ID_SPREADSHEET_ANDA_DI_SINI", "").trim();
+    ss = SpreadsheetApp.openById(cleanId);
+  } else {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
   }
-  
-  var p = e.parameter || {};
-  sheet.appendRow([
-    p.timestamp || new Date().toLocaleString("id-ID"),
-    p.nama || "-",
-    p.kelas || "-",
-    p.aktivitas || "Selesai Aktivitas",
-    p.game1 || "0",
-    p.game2 || "0",
-    p.game3 || "0",
-    p.nilaiKuis || "-",
-    p.kktp || "-"
-  ]);
-  
-  return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data tersimpan" }))
-    .setMimeType(ContentService.MimeType.JSON);
+  if (!ss) {
+    throw new Error("Spreadsheet tidak ditemukan! Pastikan SPREADSHEET_ID terisi dengan benar.");
+  }
+  return ss.getActiveSheet();
+}
+
+function doPost(e) {
+  try {
+    var sheet = getTargetSheet();
+    
+    // Buat header otomatis jika sheet masih kosong
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        "Tanggal & Waktu",
+        "Nama Siswa",
+        "Kelas",
+        "Aktivitas Belajar",
+        "Skor Game 1 (Balok)",
+        "Skor Game 2 (Cepat)",
+        "Skor Game 3 (Pasang)",
+        "Nilai Kuis",
+        "Status KKTP"
+      ]);
+      sheet.getRange(1, 1, 1, 9).setFontWeight("bold").setBackground("#D1FAE5");
+      sheet.setFrozenRows(1);
+    }
+    
+    var p = (e &amp;&amp; e.parameter) ? e.parameter : {};
+    sheet.appendRow([
+      p.timestamp || new Date().toLocaleString("id-ID"),
+      p.nama || "-",
+      p.kelas || "-",
+      p.aktivitas || "Selesai Aktivitas",
+      p.game1 || "0",
+      p.game2 || "0",
+      p.game3 || "0",
+      p.nilaiKuis || "-",
+      p.kktp || "-"
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Data berhasil disimpan" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 function doGet(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getActiveSheet();
-  var values = sheet.getDataRange().getValues();
-  if (values.length &lt;= 1) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] }))
+  try {
+    var sheet = getTargetSheet();
+    var values = sheet.getDataRange().getValues();
+    if (values.length &lt;= 1) {
+      return ContentService.createTextOutput(JSON.stringify({ status: "success", data: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    var list = [];
+    for (var i = 1; i &lt; values.length; i++) {
+      var r = values[i];
+      list.push({
+        time: r[0] ? String(r[0]) : "-",
+        nama: r[1] ? String(r[1]) : "-",
+        kelas: r[2] ? String(r[2]) : "-",
+        aktivitas: r[3] ? String(r[3]) : "-",
+        game1: r[4] !== "" ? Number(r[4]) : 0,
+        game2: r[5] !== "" ? Number(r[5]) : 0,
+        game3: r[6] !== "" ? Number(r[6]) : 0,
+        nilaiKuis: (r[7] !== "" &amp;&amp; r[7] !== "-") ? Number(r[7]) : null,
+        kktp: r[8] ? String(r[8]) : "-"
+      });
+    }
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", data: list }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
-  
-  var list = [];
-  for (var i = 1; i &lt; values.length; i++) {
-    var r = values[i];
-    list.push({
-      time: r[0] ? String(r[0]) : "-",
-      nama: r[1] ? String(r[1]) : "-",
-      kelas: r[2] ? String(r[2]) : "-",
-      aktivitas: r[3] ? String(r[3]) : "-",
-      game1: r[4] !== "" ? Number(r[4]) : 0,
-      game2: r[5] !== "" ? Number(r[5]) : 0,
-      game3: r[6] !== "" ? Number(r[6]) : 0,
-      nilaiKuis: (r[7] !== "" &amp;&amp; r[7] !== "-") ? Number(r[7]) : null,
-      kktp: r[8] ? String(r[8]) : "-"
-    });
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({ status: "success", data: list }))
-    .setMimeType(ContentService.MimeType.JSON);
 }</pre>
           </div>
         </div>
@@ -4486,7 +4583,11 @@ function doGet(e) {
        ======================================================== */
     const STORAGE_KEY_STUDENTS = 'nilai_tempat_student_records_v1';
     const STORAGE_KEY_SHEETS_URL = 'nilai_tempat_sheets_url_v1';
+    const STORAGE_KEY_SHEET_VIEW_URL = 'nilai_tempat_sheet_view_url_v1';
     const STORAGE_KEY_USER = 'nilai_tempat_current_user_v1';
+
+    const DEFAULT_SHEETS_ENDPOINT = 'https://script.google.com/macros/s/AKfycbyg2YsBeYO5smuGnMJTd0XLRFU8qedVr4Ad4fX5iebT8DLi0x-t9yvCIJEReTdzhS5gkg/exec';
+    const DEFAULT_SHEET_VIEW_URL = 'https://docs.google.com/spreadsheets/d/1JwNA7ty6evsPizR9tG6f2BVPWEFUoq9JoAoMfEdP81Y/edit';
 
     let currentUser = null; // { role: 'siswa'|'guru', name: string, kelas: string }
 
@@ -4586,6 +4687,52 @@ function doGet(e) {
       switchLoginRole('guru');
     }
 
+    function handleTeacherPanelClick() {
+      playSound('click');
+      if (currentUser && currentUser.role === 'guru') {
+        openTeacherModal();
+      } else {
+        // Aktifkan sesi guru agar pendidik dapat langsung memantau dashboard & spreadsheet
+        currentUser = {
+          role: 'guru',
+          name: 'Bapak/Ibu Guru',
+          kelas: 'Admin Pengajar'
+        };
+        saveCurrentUserSession();
+        applyUserSession();
+        openTeacherModal();
+      }
+    }
+
+    function openSpreadsheetConfig() {
+      if (!currentUser || currentUser.role !== 'guru') {
+        currentUser = {
+          role: 'guru',
+          name: 'Bapak/Ibu Guru',
+          kelas: 'Admin Pengajar'
+        };
+        saveCurrentUserSession();
+        applyUserSession();
+      }
+      openTeacherModal();
+      switchDashboardTab('sheets');
+    }
+
+    function quickLoginTeacherAndOpenSheets() {
+      currentUser = {
+        role: 'guru',
+        name: 'Bapak/Ibu Guru',
+        kelas: 'Admin Pengajar'
+      };
+      saveCurrentUserSession();
+      applyUserSession();
+      closeLoginModal();
+      openTeacherModal();
+      switchDashboardTab('sheets');
+      playSound('fanfare');
+      triggerConfetti(35);
+    }
+
     function applyUserSession() {
       if (!currentUser) return;
 
@@ -4601,13 +4748,15 @@ function doGet(e) {
       if (profileBadge) profileBadge.style.display = 'flex';
       if (btnOpenLoginNav) btnOpenLoginNav.style.display = 'none';
 
+      // Tombol dashboard & sheets selalu dapat diakses guru
+      if (btnTeacherPanel) btnTeacherPanel.style.display = 'inline-flex';
+
       if (currentUser.role === 'siswa') {
         if (userAvatarIcon) {
           userAvatarIcon.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
         }
         if (userNameDisplay) userNameDisplay.textContent = currentUser.name;
         if (userRoleDisplay) userRoleDisplay.textContent = currentUser.kelas;
-        if (btnTeacherPanel) btnTeacherPanel.style.display = 'none';
         if (heroSpeech) {
           heroSpeech.innerHTML = `"Meow! Halo <strong>${currentUser.name}</strong> dari <strong>${currentUser.kelas}</strong>! Kiki siap menemanimu belajar nilai tempat!" 🐾`;
         }
@@ -4657,7 +4806,7 @@ function doGet(e) {
 
       if (profileBadge) profileBadge.style.display = 'none';
       if (btnOpenLoginNav) btnOpenLoginNav.style.display = 'inline-flex';
-      if (btnTeacherPanel) btnTeacherPanel.style.display = 'none';
+      if (btnTeacherPanel) btnTeacherPanel.style.display = 'inline-flex';
       if (heroSpeech) {
         heroSpeech.innerHTML = `"Meow! Namaku <strong>Kiki</strong>! Aku siap menemanimu belajar nilai tempat sampai mahir!" 🐾`;
       }
@@ -4787,7 +4936,8 @@ function doGet(e) {
     }
 
     let studentRecords = loadStudentRecords();
-    let googleSheetsEndpoint = localStorage.getItem(STORAGE_KEY_SHEETS_URL) || '';
+    let googleSheetsEndpoint = localStorage.getItem(STORAGE_KEY_SHEETS_URL) || DEFAULT_SHEETS_ENDPOINT;
+    let googleSheetViewUrl = localStorage.getItem(STORAGE_KEY_SHEET_VIEW_URL) || DEFAULT_SHEET_VIEW_URL;
 
     function recordStudentLogin(nama, kelas) {
       const now = new Date();
@@ -4930,21 +5080,82 @@ function doGet(e) {
 
     function updateSheetBadge(isConnected) {
       const badge = document.getElementById('sheetLiveBadge');
+      const banner = document.getElementById('sheetsConnectionStatusBanner');
+      const bannerIcon = document.getElementById('sheetBannerIcon');
+      const bannerTitle = document.getElementById('sheetBannerTitle');
+      const bannerDesc = document.getElementById('sheetBannerDesc');
+      const btnDisconnect = document.getElementById('btnDisconnectSheet');
+      const btnOpenCurrent = document.getElementById('btnOpenCurrentSheet');
+      const btnOpenLiveHeader = document.getElementById('btnOpenLiveSheetHeader');
+      const connectedActions = document.getElementById('sheetConnectedActions');
+
+      const hasUrl = !!googleSheetsEndpoint;
+
       if (badge) {
-        if (isConnected && googleSheetsEndpoint) {
+        if (hasUrl) {
           badge.className = 'sheet-status-pill';
           badge.style.background = '#ECFDF5';
           badge.style.color = '#047857';
           badge.style.borderColor = '#A7F3D0';
-          badge.innerHTML = '<span class="live-dot"></span> Spreadsheet Terhubung';
+          badge.innerHTML = '<span class="live-dot"></span> Spreadsheet Terhubung 🟢';
           badge.title = 'Terhubung ke: ' + googleSheetsEndpoint;
         } else {
           badge.className = 'sheet-status-pill';
           badge.style.background = '#FFFBEB';
           badge.style.color = '#B45309';
           badge.style.borderColor = '#FDE68A';
-          badge.innerHTML = '⚠️ Spreadsheet Belum Dihubungkan';
-          badge.title = 'Klik untuk memasukkan Web App URL Google Sheets';
+          badge.innerHTML = '⚠️ Spreadsheet Belum Terhubung';
+          badge.title = 'Klik untuk menghubungkan ke Google Sheets';
+        }
+      }
+
+      if (btnOpenLiveHeader) {
+        if (googleSheetViewUrl) {
+          btnOpenLiveHeader.href = googleSheetViewUrl;
+          btnOpenLiveHeader.style.display = 'inline-flex';
+        } else {
+          btnOpenLiveHeader.style.display = 'none';
+        }
+      }
+
+      if (banner) {
+        if (hasUrl) {
+          banner.style.background = '#ECFDF5';
+          banner.style.borderColor = '#A7F3D0';
+          if (bannerIcon) bannerIcon.textContent = '🟢';
+          if (bannerTitle) {
+            bannerTitle.style.color = '#065F46';
+            bannerTitle.innerHTML = 'Koneksi Google Spreadsheet AKTIF &amp; TERSAMBUNG';
+          }
+          if (bannerDesc) {
+            bannerDesc.style.color = '#047857';
+            bannerDesc.innerHTML = `Sinkronisasi aktif ke Endpoint: <code style="background:#D1FAE5; padding:2px 6px; border-radius:4px; font-size:0.8rem; word-break:break-all;">${googleSheetsEndpoint.slice(0, 50)}...</code>`;
+          }
+          if (btnDisconnect) btnDisconnect.style.display = 'inline-block';
+          if (connectedActions) connectedActions.style.display = 'flex';
+        } else {
+          banner.style.background = '#FFFBEB';
+          banner.style.borderColor = '#FDE68A';
+          if (bannerIcon) bannerIcon.textContent = '⚠️';
+          if (bannerTitle) {
+            bannerTitle.style.color = '#92400E';
+            bannerTitle.innerHTML = 'Google Spreadsheet Belum Terhubung';
+          }
+          if (bannerDesc) {
+            bannerDesc.style.color = '#B45309';
+            bannerDesc.innerHTML = 'Data tersimpan di browser lokal. Hubungkan Web App Apps Script di bawah agar nilai siswa masuk ke spreadsheet secara online.';
+          }
+          if (btnDisconnect) btnDisconnect.style.display = 'none';
+          if (connectedActions) connectedActions.style.display = 'none';
+        }
+      }
+
+      if (btnOpenCurrent) {
+        if (googleSheetViewUrl) {
+          btnOpenCurrent.href = googleSheetViewUrl;
+          btnOpenCurrent.style.display = 'inline-flex';
+        } else {
+          btnOpenCurrent.style.display = 'none';
         }
       }
     }
@@ -4966,9 +5177,10 @@ function doGet(e) {
 
       if (note) {
         if (googleSheetsEndpoint) {
-          note.innerHTML = `<span>🟢</span> <span>Data siswa terdeteksi dan tersinkronisasi ke <strong>Dashboard Guru</strong> &amp; <strong>Google Spreadsheet</strong>.</span>`;
+          const sheetLink = googleSheetViewUrl ? ` <a href="${googleSheetViewUrl}" target="_blank" style="color:#15803D; font-weight:700; text-decoration:underline;">[↗ Buka Spreadsheet]</a>` : '';
+          note.innerHTML = `<span>🟢</span> <span>Data siswa terdeteksi dan tersinkronisasi ke <strong>Dashboard Guru</strong> &amp; <strong>Google Spreadsheet</strong>.${sheetLink}</span>`;
         } else {
-          note.innerHTML = `<span>💾</span> <span>Data siswa terdeteksi dan tersimpan permanen di <strong>Dashboard Guru</strong>. Sambungkan spreadsheet di Dashboard jika ingin sync online.</span>`;
+          note.innerHTML = `<span>💾</span> <span>Data siswa terdeteksi dan tersimpan permanen di <strong>Dashboard Guru</strong>. <a href="javascript:void(0)" onclick="openSpreadsheetConfig()" style="color:#15803D; text-decoration:underline; font-weight:700;">Sambungkan spreadsheet</a> jika ingin sync online.</span>`;
         }
       }
     }
@@ -5079,9 +5291,10 @@ function doGet(e) {
         renderDashboardTable();
       } else if (tabId === 'sheets') {
         const inputUrl = document.getElementById('googleSheetWebAppUrl');
-        if (inputUrl && googleSheetsEndpoint) {
-          inputUrl.value = googleSheetsEndpoint;
+        if (inputUrl) {
+          inputUrl.value = googleSheetsEndpoint || googleSheetViewUrl || '';
         }
+        updateSheetBadge(!!googleSheetsEndpoint);
       }
     }
 
@@ -5258,27 +5471,146 @@ function doGet(e) {
       const input = document.getElementById('googleSheetWebAppUrl');
       if (!input) return;
       const url = input.value.trim();
-      googleSheetsEndpoint = url;
-      try {
-        localStorage.setItem(STORAGE_KEY_SHEETS_URL, url);
-      } catch (e) {
-        console.warn('Gagal menyimpan sheets url ke localStorage:', e);
+      const statusMsg = document.getElementById('sheetStatusMsg');
+
+      if (!url) {
+        googleSheetsEndpoint = '';
+        googleSheetViewUrl = '';
+        localStorage.removeItem(STORAGE_KEY_SHEETS_URL);
+        localStorage.removeItem(STORAGE_KEY_SHEET_VIEW_URL);
+        updateSheetBadge(false);
+        if (statusMsg) {
+          statusMsg.style.display = 'block';
+          statusMsg.className = 'badge-status warning';
+          statusMsg.innerHTML = '⚠️ URL dikosongkan. Mode penyimpanan tabel lokal aktif.';
+        }
+        playSound('click');
+        return;
       }
 
-      const statusMsg = document.getElementById('sheetStatusMsg');
+      // 1. Cek jika URL adalah tautan langsung Google Spreadsheet (bukan Apps Script Web App)
+      const sheetMatch = url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/i);
+      if (sheetMatch) {
+        const sheetId = sheetMatch[1];
+        googleSheetViewUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
+        localStorage.setItem(STORAGE_KEY_SHEET_VIEW_URL, googleSheetViewUrl);
+        updateSheetBadge(!!googleSheetsEndpoint);
+
+        if (statusMsg) {
+          statusMsg.style.display = 'block';
+          statusMsg.className = 'badge-status info';
+          statusMsg.style.background = '#EFF6FF';
+          statusMsg.style.color = '#1E40AF';
+          statusMsg.style.border = '1.5px solid #BFDBFE';
+          statusMsg.style.lineHeight = '1.6';
+          statusMsg.innerHTML = `
+            <div style="font-weight:800; font-size:0.95rem; margin-bottom:6px;">📄 Tautan Google Spreadsheet Dikenali!</div>
+            <div>File spreadsheet Anda tersimpan: <strong><a href="${googleSheetViewUrl}" target="_blank" style="color:#2563EB; text-decoration:underline;">Buka Lembar Spreadsheet Ini ↗</a></strong></div>
+            <div style="margin-top:8px; font-size:0.86rem; color:#334155; background:white; padding:10px 12px; border-radius:6px; border:1px solid #DBEAFE;">
+              ⚠️ <strong>Langkah Penting:</strong> Agar aplikasi web ini bisa menulis data siswa secara otomatis, Google mewajibkan <strong>URL Web App Apps Script</strong> (berakhiran <code>/exec</code>):
+              <ol style="margin:6px 0 6px 18px; padding:0;">
+                <li>Buka file spreadsheet tersebut, klik menu <strong>Ekstensi &gt; Apps Script</strong>.</li>
+                <li>Hapus kode bawaan, klik tombol <strong>Salin Kode</strong> di bawah dan tempelkan.</li>
+                <li>Klik tombol biru <strong>Terapkan (Deploy) &gt; Penerapan baru &gt; Aplikasi web</strong>. Pastikan akses dipilih <strong>Siapa saja (Anyone)</strong>.</li>
+                <li>Salin URL Web App yang muncul (akhiran <code>/exec</code>) lalu tempelkan di kolom ini.</li>
+              </ol>
+            </div>
+          `;
+        }
+        playSound('correct');
+        return;
+      }
+
+      // 2. Jika URL adalah Web App Apps Script
+      googleSheetsEndpoint = url;
+      localStorage.setItem(STORAGE_KEY_SHEETS_URL, url);
+      updateSheetBadge(true);
+
       if (statusMsg) {
         statusMsg.style.display = 'block';
-        if (url) {
-          statusMsg.className = 'badge-status success';
-          statusMsg.innerHTML = '✅ URL tersimpan permanen! Sinkronisasi otomatis ke Google Sheets aktif.';
-          updateSheetBadge(true);
-        } else {
+        statusMsg.className = 'badge-status success';
+        statusMsg.style.background = '#ECFDF5';
+        statusMsg.style.color = '#065F46';
+        statusMsg.style.border = '1.5px solid #A7F3D0';
+        statusMsg.innerHTML = '🎉 <strong>Sukses Terhubung!</strong> URL Web App Google Apps Script berhasil disimpan. Data pengerjaan siswa akan otomatis masuk ke lembar Google Spreadsheet Anda.';
+      }
+      playSound('fanfare');
+      triggerConfetti(45);
+    }
+
+    function disconnectGoogleSheets() {
+      if (confirm('Putuskan koneksi Google Spreadsheet? Data siswa di tabel lokal browser tetap aman.')) {
+        googleSheetsEndpoint = '';
+        googleSheetViewUrl = '';
+        localStorage.removeItem(STORAGE_KEY_SHEETS_URL);
+        localStorage.removeItem(STORAGE_KEY_SHEET_VIEW_URL);
+        const input = document.getElementById('googleSheetWebAppUrl');
+        if (input) input.value = '';
+        const statusMsg = document.getElementById('sheetStatusMsg');
+        if (statusMsg) {
+          statusMsg.style.display = 'block';
           statusMsg.className = 'badge-status warning';
-          statusMsg.innerHTML = '⚠️ URL kosong. Mode penyimpanan tabel lokal aktif.';
-          updateSheetBadge(false);
+          statusMsg.innerHTML = '⚠️ Koneksi Google Spreadsheet telah diputuskan. Data kini disimpan secara lokal.';
+        }
+        updateSheetBadge(false);
+        playSound('click');
+      }
+    }
+
+    async function syncAllLocalRecordsToSheet() {
+      playSound('click');
+      if (!googleSheetsEndpoint) {
+        alert('Google Spreadsheet belum dihubungkan!\n\nSilakan masukkan dan simpan URL Web App Apps Script terlebih dahulu di tab "Sambungkan Google Sheets".');
+        switchDashboardTab('sheets');
+        return;
+      }
+
+      const realStudents = studentRecords.filter(s => !s.isDemo);
+      const toSync = realStudents.length > 0 ? realStudents : studentRecords;
+      if (!toSync.length) {
+        alert('Belum ada data siswa untuk disinkronkan ke Spreadsheet.');
+        return;
+      }
+
+      if (!confirm(`Kirim ${toSync.length} baris data siswa ke Google Spreadsheet sekarang?`)) return;
+
+      const btn1 = document.getElementById('btnSyncAllToSheet');
+      const origText1 = btn1 ? btn1.innerHTML : '';
+      if (btn1) btn1.innerHTML = '⏳ Mengirim...';
+
+      let successCount = 0;
+      for (const s of toSync) {
+        const payload = {
+          timestamp: s.time || new Date().toLocaleString('id-ID'),
+          nama: s.nama,
+          kelas: s.kelas,
+          aktivitas: s.aktivitas || 'Data Rekap Siswa',
+          game1: s.game1 || 0,
+          game2: s.game2 || 0,
+          game3: s.game3 || 0,
+          nilaiKuis: s.nilaiKuis !== null ? s.nilaiKuis : '-',
+          kktp: s.kktp || '-'
+        };
+        try {
+          const formData = new URLSearchParams();
+          for (const k in payload) formData.append(k, payload[k]);
+          await fetch(googleSheetsEndpoint, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+          });
+          successCount++;
+        } catch (e) {
+          console.warn('Gagal sinkron baris siswa:', s.nama, e);
         }
       }
-      playSound('correct');
+
+      if (btn1) btn1.innerHTML = origText1 || '<span>📤 Kirim ke Sheets</span>';
+      playSound('fanfare');
+      triggerConfetti(45);
+      alert(`🎉 Selesai! Sebanyak ${successCount} dari ${toSync.length} baris data siswa berhasil dikirim ke Google Spreadsheet.`);
+      updateSheetBadge(true);
     }
 
     function testSendToGoogleSheets() {
@@ -5288,6 +5620,12 @@ function doGet(e) {
         alert('Mohon masukkan URL Web App Google Apps Script terlebih dahulu!');
         return;
       }
+
+      if (url.includes('docs.google.com/spreadsheets/d/')) {
+        saveGoogleSheetUrl();
+        return;
+      }
+
       googleSheetsEndpoint = url;
       try {
         localStorage.setItem(STORAGE_KEY_SHEETS_URL, url);
@@ -6723,9 +7061,10 @@ function doGet(e) {
       studentRecords = loadStudentRecords();
 
       // 2. Muat endpoint Google Sheets dari localStorage
-      googleSheetsEndpoint = localStorage.getItem(STORAGE_KEY_SHEETS_URL) || '';
+      googleSheetsEndpoint = localStorage.getItem(STORAGE_KEY_SHEETS_URL) || DEFAULT_SHEETS_ENDPOINT;
+      googleSheetViewUrl = localStorage.getItem(STORAGE_KEY_SHEET_VIEW_URL) || DEFAULT_SHEET_VIEW_URL;
       const inputUrl = document.getElementById('googleSheetWebAppUrl');
-      if (inputUrl && googleSheetsEndpoint) {
+      if (inputUrl) {
         inputUrl.value = googleSheetsEndpoint;
       }
       updateSheetBadge(!!googleSheetsEndpoint);
